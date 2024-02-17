@@ -9,14 +9,14 @@ let debutPlateauY = 100;
 let largeurPlateau = WIDTH - 100 - debutPlateauX;
 let hauteurPlateau = HEIGHT - 100 - debutPlateauY;
 
-let nbCaseX = 4;
-let nbCaseY = 4;
+let nbCaseX = 6;
+let nbCaseY = 3;
 let tailleChiffre = largeurPlateau / nbCaseX / 3;
 let tailleCase = largeurPlateau / nbCaseX;
 
 
 //plateau de jeu:
-let plateau = [[2, 4, 2, 2], [4, 4, 2, 16], [2, 2, 2, 2], [2, 8, 0, 2]];
+let plateau = [[2, 4, 2, 0, 2, 32], [0, 4, 0, 2, 2, 32],[2, 0, 2, 2, 2, 32]];
 let couleurCase = {
     0: "darkgrey",
     2: "orange",
@@ -44,30 +44,43 @@ window.onload = function () {
 
 }
 
+function pressKey(event) {
+    let deplacement = false;
+    if (event.key == "z") {
+        deplacementCase("haut");
+        deplacement = true;
+    } else if (event.key == "q") {
+        deplacementCase("gauche");
+        deplacement = true;
+    } else if (event.key == "s") {
+        deplacementCase("bas");
+        deplacement = true;
+    } else if (event.key == "d") {
+        deplacementCase("droite");
+        deplacement = true;
+    } 
+    if (deplacement) {
+        ajouterNouvelleCase();
+    }
+    
+}
+
 function game() {
     context.fillStyle = "red"
     context.fillRect(100, 100, 100, 100)
     affichePlateau()
 
     if (!finGame()) {
-        console.log("GOOO !!")
         requestAnimationFrame(game)
+        console.log("Goo !!")
+
     } else {
         console.log("FIn !!")
     }
 }
 
-function pressKey(event) {
-    if (event.key == "z") {
-        deplacement("haut");
-    } else if (event.key == "q") {
-        deplacement("gauche");
-    } else if (event.key == "s") {
-        deplacement("bas");
-    } else if (event.key == "d") {
-        deplacement("droite");
-    }
-}
+
+
 
 
 function finGame() {
@@ -115,13 +128,34 @@ function affichePlateau() {
 
 
 function ajouterNouvelleCase() {
-    // nombre aleatoire entre 1-4, si c'est 1 je fais apparaitre une case 4
+    // nombre aleatoire entre 0-3, si c'est 0 je fais apparaitre une case 4
     // sinon je fais apparaiter une case 2
+    let nombreAlea = Math.floor(Math.random() * 4);
+    let valeurNewCase = 0;
+    if (nombreAlea == 0) {
+        valeurNewCase=4;
+    } else {
+        valeurNewCase=2;
+    }
+
+    let trouvePlace = false;
+    while (!trouvePlace) {
+        let x = Math.floor(Math.random() * nbCaseX);;
+        let y = Math.floor(Math.random() * nbCaseY);;
+        if (plateau[y][x] == 0) {
+            plateau[y][x] = valeurNewCase;
+            trouvePlace = true;
+        }
+        console.log("new Case de valeur " + valeurNewCase + " de possityion : " + x, y)
+    }
+    
+
+    
 }
 
 
 //fonction de déplacement:
-function deplacement(direction) {
+function deplacementCase(direction) {
     // déplacement vers le haut:
     /*
     dans un premier temps, je place la ligne que je gere dnas un liste est 
@@ -132,8 +166,7 @@ function deplacement(direction) {
     */
     let arrayModif = []
 
-    if (direction == "haut" || direction == "bas") {
-
+    if (direction == "bas") {
         for (let x = 0; x < nbCaseX; x++) {
             arrayModif.push([]);
             for (let y = 0; y < nbCaseY; y++) {
@@ -145,7 +178,20 @@ function deplacement(direction) {
 
             }
         }
-    } else if (direction == "droite") {
+    }
+    else if (direction == "haut") {
+        for (let x = 0; x < nbCaseX; x++) {
+            arrayModif.push([]);
+            for (let y = 1; y < nbCaseY+1; y++) {
+                if (plateau[nbCaseY-y][x] != 0) {
+                    arrayModif[x].push(plateau[nbCaseY-y][x]);
+                } else {
+                    arrayModif[x].unshift(0);
+                }
+
+            }
+        }
+    }    else if (direction == "droite") {
         for (let y = 0; y < nbCaseY; y++) {
             arrayModif.push([])
             for (let x = 0; x < nbCaseX; x++) {
@@ -155,10 +201,7 @@ function deplacement(direction) {
                 } else {
                     arrayModif[y].unshift(0);
                 }
-
-
             }
-
         }
     } else if (direction == "gauche") {
         for (let y = 0; y < nbCaseY; y++) {
@@ -170,47 +213,44 @@ function deplacement(direction) {
                     arrayModif[y].unshift(0);
                 }
             }
-            //arrayModif[y].reverse();
-
         }
     }
 
-
     //Etape 2:
-    for (let y = 0; y < arrayModif.length; y++) {
-        for (let x = 2; x < arrayModif[0].length + 1; x++) {
-            if (arrayModif[y][nbCaseX - x] == arrayModif[y][nbCaseX - x + 1] || arrayModif[y][nbCaseX - x + 1] == 0) {
-                arrayModif[y][nbCaseX - x + 1] += arrayModif[y][nbCaseX - x]
-                arrayModif[y].splice(nbCaseX - x, 1);
+    let tailleListeX = arrayModif[0].length
+    let tailleListeY = arrayModif.length
+
+    for (let y = 0; y < tailleListeY; y++) {
+        a=0
+        for (let x = 2; x < tailleListeX; x++) {
+            console.log(a)
+            a++
+            if (arrayModif[y][tailleListeX - x] == arrayModif[y][tailleListeX - x + 1] || arrayModif[y][tailleListeX - x + 1] == 0 ) {
+        
+                arrayModif[y][tailleListeX - x + 1] += arrayModif[y][tailleListeX - x]
+                arrayModif[y].splice(tailleListeX - x, 1);
                 arrayModif[y].unshift(0);
 
             }
         }
     }
 
-
     // Etape 3 replacer dans le grille du plateau:
     if (direction == "haut") {
-
         for (let x = 0; x < nbCaseX; x++) {
             arrayModif[x].reverse()
             for (let y = 0; y < nbCaseY; y++) {
-
                 plateau[y][x] = arrayModif[x][y]
-
             }
         }
     } else if (direction == "bas") {
         for (let x = 0; x < nbCaseX; x++) {
             for (let y = 0; y < nbCaseY; y++) {
-
                 plateau[y][x] = arrayModif[x][y]
-
             }
         }
     } else if (direction == "droite") {
         for (let y = 0; y < nbCaseY; y++) {
-            //arrayModif[y].reverse()
             plateau[y] = arrayModif[y]
         }
     } else if (direction == "gauche") {
@@ -232,4 +272,6 @@ function testMouvementPlateau() {
         }
     });
 }
+
+
 

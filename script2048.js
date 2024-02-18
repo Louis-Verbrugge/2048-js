@@ -3,33 +3,37 @@
 const HEIGHT = 800;
 const WIDTH = 800;
 
+
+let nbCaseX = 4;   
+let nbCaseY = 4;    
+let tailleChiffre = WIDTH / nbCaseX / 3;
+let tailleCase = WIDTH / nbCaseX;
+let tailleBordure = tailleCase / 10;
+
+
 //cadre de jeu:
-let debutPlateauX = 100;
-let debutPlateauY = 100;
-let largeurPlateau = WIDTH - 100 - debutPlateauX;
-let hauteurPlateau = HEIGHT - 100 - debutPlateauY;
-
-let nbCaseX = 6;
-let nbCaseY = 3;
-let tailleChiffre = largeurPlateau / nbCaseX / 3;
-let tailleCase = largeurPlateau / nbCaseX;
-
+let debutPlateauX = tailleBordure;
+let debutPlateauY = tailleBordure;
+let largeurPlateau = WIDTH - tailleBordure - debutPlateauX;
+let hauteurPlateau = HEIGHT - tailleBordure - debutPlateauY;
 
 //plateau de jeu:
-let plateau = [[2, 4, 2, 0, 2, 32], [0, 4, 0, 2, 2, 32],[2, 0, 2, 2, 2, 32]];
+let plateau;
+initGame();
+
 let couleurCase = {
-    0: "darkgrey",
-    2: "orange",
-    4: "orange",
-    8: "red",
-    16: "purple",
-    32: "blue",
-    64: "green",
-    128: "pink",
-    256: "brown",
-    512: "black",
-    1024: "grey",
-    2048: "gold"
+    0: "#ccc0b2",
+    2: "#eee4da",
+    4: "#eddfc4",
+    8: "#f4b17a",
+    16: "#f59563",
+    32: "#f67e5b",  
+    64: "#f65e39",
+    128: "#edce73",
+    256: "#edca64",
+    512: "#edc651",
+    1024: "#e1cc37",
+    2048: "#e9c33c"
 }
 
 window.onload = function () {
@@ -38,7 +42,7 @@ window.onload = function () {
     board.height = HEIGHT;
     board.width = WIDTH;
     context = board.getContext("2d");
-
+    
     requestAnimationFrame(game);
     document.addEventListener("keydown", pressKey)
 
@@ -65,17 +69,26 @@ function pressKey(event) {
     
 }
 
+function initGame() {
+    plateau = []
+    for (let y = 0; y < nbCaseY; y++) {
+        plateau.push([])
+        for (let x = 0; x < nbCaseX; x++) {
+            plateau[y].push(0)
+        }
+    }
+    ajouterNouvelleCase()
+    ajouterNouvelleCase()
+}
+
 function game() {
-    context.fillStyle = "red"
-    context.fillRect(100, 100, 100, 100)
+
     affichePlateau()
 
     if (!finGame()) {
         requestAnimationFrame(game)
-        console.log("Goo !!")
 
     } else {
-        console.log("FIn !!")
     }
 }
 
@@ -101,7 +114,8 @@ function finGame() {
 
 function affichePlateau() {
     //affiche les pièces:
-    context.font = "48px verdana";
+    console.log(tailleCase, tailleChiffre)
+    context.font = tailleChiffre+"px verdana";
     context.textAlign = "center";
     context.textBaseline = "middle";
 
@@ -111,14 +125,14 @@ function affichePlateau() {
 
             context.fillStyle = couleurCase[plateau[y][x]];
             context.fillRect(debutPlateauX + (largeurPlateau / nbCaseX) * x, debutPlateauY + (hauteurPlateau / nbCaseY) * y, largeurPlateau / nbCaseX, hauteurPlateau / nbCaseY);
-            context.fillStyle = "black";
+            context.fillStyle = "#776e65";
             context.fillText(plateau[y][x], debutPlateauX + (largeurPlateau / nbCaseX) * x + tailleCase / 2, debutPlateauY + (hauteurPlateau / nbCaseY) * y + tailleCase / 2);
         }
     }
 
     //affiche bordure:
-    context.strokeStyle = "grey";
-    context.lineWidth = 9;
+    context.strokeStyle = "#bbaea0";
+    context.lineWidth = tailleBordure;
     for (let y = 0; y < nbCaseY; y++) {
         for (let x = 0; x < nbCaseX; x++) {
             context.strokeRect(debutPlateauX + (largeurPlateau / nbCaseX) * x, debutPlateauY + (hauteurPlateau / nbCaseY) * y, largeurPlateau / nbCaseX, hauteurPlateau / nbCaseY);
@@ -146,10 +160,7 @@ function ajouterNouvelleCase() {
             plateau[y][x] = valeurNewCase;
             trouvePlace = true;
         }
-        console.log("new Case de valeur " + valeurNewCase + " de possityion : " + x, y)
     }
-    
-
     
 }
 
@@ -221,12 +232,8 @@ function deplacementCase(direction) {
     let tailleListeY = arrayModif.length
 
     for (let y = 0; y < tailleListeY; y++) {
-        a=0
-        for (let x = 2; x < tailleListeX; x++) {
-            console.log(a)
-            a++
+        for (let x = 2; x < tailleListeX+1; x++) {
             if (arrayModif[y][tailleListeX - x] == arrayModif[y][tailleListeX - x + 1] || arrayModif[y][tailleListeX - x + 1] == 0 ) {
-        
                 arrayModif[y][tailleListeX - x + 1] += arrayModif[y][tailleListeX - x]
                 arrayModif[y].splice(tailleListeX - x, 1);
                 arrayModif[y].unshift(0);
@@ -263,15 +270,18 @@ function deplacementCase(direction) {
 }
 
 
-//// test:
-function testMouvementPlateau() {
-    gsap.set("#board", { opacity: 0, x: 500, y: 50 })
-    gsap.to("#board", {
-        opacity: 1, y: 600, x: -800, rotation: 360, duration: 3, ease: "bounce", onComplete: function () {
-            gsap.to("#board", { opacity: 0.2, x: 500, y: 50, duration: 3, rotation: -360, ease: "bounce" }); // Retour à la position initiale
+
+function restartGame() {
+    gsap.to(".jeu2048", {
+        y: -1000, duration: 0.5, ease: "step", onComplete: function () {
+            initGame()
+            gsap.to(".jeu2048", { y: 0, duration: 2, ease: "bounce" }); // Retour à la position initiale
+            
         }
     });
 }
+
+
 
 
 

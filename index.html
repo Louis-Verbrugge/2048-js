@@ -13,8 +13,24 @@
 
 <body>
 
+    <div class="jeu2048">
 
-    <canvas id="board"></canvas>
+        <div class="blockRow">
+            <h1>2048</h1>
+
+            <div class="blockRow">
+                <h2>Margot + </h2>
+                <h2> Louis</h2>
+            </div>
+
+        </div> 
+        <div class="blockRow">
+            <h1>2048</h1>
+            <button id="newGame" onclick="restartGame()">New Game</button>
+        </div>  
+
+        <canvas id="board"></canvas>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
     <script src="script2048.js"></script>

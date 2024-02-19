@@ -19,7 +19,12 @@ let hauteurPlateau = HEIGHT - tailleBordure - debutPlateauY;
 
 //plateau de jeu:
 let plateau;
-initGame();
+let listeCaseMouvement = [
+    [{ value: 0, animation: false, targetX:0, targetY:0 },{ value: 0, animation: false, targetX:0, targetY:0 },{ value: 0, animation: false, targetX:0, targetY:0 },{ value: 0, animation: false, targetX:0, targetY:0 }],
+    [{ value: 0, animation: false, targetX:0, targetY:0 },{ value: 0, animation: false, targetX:0, targetY:0 },{ value: 0, animation: false, targetX:0, targetY:0 },{ value: 0, animation: false, targetX:0, targetY:0 }],
+    [{ value: 0, animation: false, targetX:0, targetY:0 },{ value: 0, animation: false, targetX:0, targetY:0 },{ value: 0, animation: false, targetX:0, targetY:0 },{ value: 0, animation: false, targetX:0, targetY:0 }],
+    [{ value: 0, animation: false, targetX:0, targetY:0 },{ value: 0, animation: false, targetX:0, targetY:0 },{ value: 0, animation: false, targetX:0, targetY:0 },{ value: 0, animation: false, targetX:0, targetY:0 }]
+];
 
 let couleurCase = {
     0: "#ccc0b2",
@@ -36,6 +41,7 @@ let couleurCase = {
     2048: "#e9c33c"
 }
 
+
 window.onload = function () {
 
     board = document.getElementById("board")
@@ -45,6 +51,7 @@ window.onload = function () {
     
     requestAnimationFrame(game);
     document.addEventListener("keydown", pressKey)
+    initGame();
 
 }
 
@@ -65,11 +72,22 @@ function pressKey(event) {
     } 
     if (deplacement) {
         ajouterNouvelleCase();
+        //affichePlateau(); // sans annimation
+        affichePlat();      // avec annimation
     }
     
 }
 
 function initGame() {
+
+    listeCaseMouvement = []
+    for (let y = 0; y < nbCaseY; y++) {
+        listeCaseMouvement.push([])
+        for (let x = 0; x < nbCaseX; x++) {
+            listeCaseMouvement[y].push({ value: 0, animation: false, x: x*tailleCase, y:y*tailleCase, ancienneX: x*tailleCase, ancienneY:y*tailleCase });
+        }
+    }
+    ////
     plateau = []
     for (let y = 0; y < nbCaseY; y++) {
         plateau.push([])
@@ -77,18 +95,19 @@ function initGame() {
             plateau[y].push(0)
         }
     }
-    ajouterNouvelleCase()
-    ajouterNouvelleCase()
+    ajouterNouvelleCase();
+    ajouterNouvelleCase();
+    affichePlateau();
+
 }
 
 function game() {
 
-    affichePlateau()
+    //affichePlateau()
 
     if (!finGame()) {
         requestAnimationFrame(game)
 
-    } else {
     }
 }
 
@@ -112,24 +131,47 @@ function finGame() {
 }
 
 
-function affichePlateau() {
-    //affiche les pièces:
-    console.log(tailleCase, tailleChiffre)
+function affichePlat() {
+    listeCaseMouvement.forEach(function (element) {
+        element.forEach(function (elem) {
+            if ( elem.animation ) {
+                gsap.fromTo(elem, {x: elem.x, y : elem.y }, { x: elem.x+elem.targetX, y: elem.y+elem.targetY, duration: 2,
+                                onUpdate: function() {
+                                    drawSquare(elem);
+                                }, onComplete: () => {
+                                    // on remet les valeurs à 0:
+                                    listeCaseMouvement[(elem.y/tailleCase)][(elem.x/tailleCase)].value = elem.value;
+                                    listeCaseMouvement[(elem.y/tailleCase)-(elem.targetY/tailleCase)][(elem.x/tailleCase)-(elem.targetX/tailleCase)].value = 0;
+                                    listeCaseMouvement[(elem.y/tailleCase)-(elem.targetY/tailleCase)][(elem.x/tailleCase)-(elem.targetX/tailleCase)].animation = false;
+                                    elem.x = elem.ancienneX;
+                                    elem.y = elem.ancienneY;
+                                    elem.targetY = 0;
+                                    elem.targetX = 0;
+                                } })
+            }
+        })
+    })
+}
+
+function drawSquare(elem) {
+    
+    //affiche carre:
+    context.fillStyle = couleurCase[elem.value];
+    context.fillRect(elem.x, elem.y, largeurPlateau / nbCaseX, hauteurPlateau / nbCaseY);
+
+    //affiche texte:
     context.font = tailleChiffre+"px verdana";
     context.textAlign = "center";
     context.textBaseline = "middle";
+    context.fillStyle = "#776e65";
+    context.fillText(elem.value, elem.x+tailleCase/2, elem.y+tailleCase/2);
+
+    affichePlateau() 
+}
 
 
-    for (let y = 0; y < nbCaseY; y++) {
-        for (let x = 0; x < nbCaseX; x++) {
-
-            context.fillStyle = couleurCase[plateau[y][x]];
-            context.fillRect(debutPlateauX + (largeurPlateau / nbCaseX) * x, debutPlateauY + (hauteurPlateau / nbCaseY) * y, largeurPlateau / nbCaseX, hauteurPlateau / nbCaseY);
-            context.fillStyle = "#776e65";
-            context.fillText(plateau[y][x], debutPlateauX + (largeurPlateau / nbCaseX) * x + tailleCase / 2, debutPlateauY + (hauteurPlateau / nbCaseY) * y + tailleCase / 2);
-        }
-    }
-
+function affichePlateau() {
+ 
     //affiche bordure:
     context.strokeStyle = "#bbaea0";
     context.lineWidth = tailleBordure;
@@ -156,8 +198,8 @@ function ajouterNouvelleCase() {
     while (!trouvePlace) {
         let x = Math.floor(Math.random() * nbCaseX);;
         let y = Math.floor(Math.random() * nbCaseY);;
-        if (plateau[y][x] == 0) {
-            plateau[y][x] = valeurNewCase;
+        if (listeCaseMouvement[y][x].value == 0) {
+            listeCaseMouvement[y][x].value = valeurNewCase;
             trouvePlace = true;
         }
     }
@@ -181,11 +223,8 @@ function deplacementCase(direction) {
         for (let x = 0; x < nbCaseX; x++) {
             arrayModif.push([]);
             for (let y = 0; y < nbCaseY; y++) {
-                if (plateau[y][x] != 0) {
-                    arrayModif[x].push(plateau[y][x]);
-                } else {
-                    arrayModif[x].unshift(0);
-                }
+                arrayModif[x].push(listeCaseMouvement[y][x].value);
+                
 
             }
         }
@@ -194,11 +233,8 @@ function deplacementCase(direction) {
         for (let x = 0; x < nbCaseX; x++) {
             arrayModif.push([]);
             for (let y = 1; y < nbCaseY+1; y++) {
-                if (plateau[nbCaseY-y][x] != 0) {
-                    arrayModif[x].push(plateau[nbCaseY-y][x]);
-                } else {
-                    arrayModif[x].unshift(0);
-                }
+                arrayModif[x].push(listeCaseMouvement[nbCaseY-y][x].value);
+                
 
             }
         }
@@ -206,28 +242,72 @@ function deplacementCase(direction) {
         for (let y = 0; y < nbCaseY; y++) {
             arrayModif.push([])
             for (let x = 0; x < nbCaseX; x++) {
-
-                if (plateau[y][x] != 0) {
-                    arrayModif[y].push(plateau[y][x])
-                } else {
-                    arrayModif[y].unshift(0);
-                }
+                arrayModif[y].push(listeCaseMouvement[y][x].value)
             }
         }
     } else if (direction == "gauche") {
         for (let y = 0; y < nbCaseY; y++) {
             arrayModif.push([])
             for (let x = 1; x < nbCaseX + 1; x++) {
-                if (plateau[y][nbCaseX - x] != 0) {
-                    arrayModif[y].push(plateau[y][nbCaseX - x])
-                } else {
-                    arrayModif[y].unshift(0);
-                }
+                arrayModif[y].push(listeCaseMouvement[y][nbCaseX-x].value)
             }
         }
     }
 
-    //Etape 2:
+    //Etape 2.2:
+    //on supprime les 0:
+    let mouvementCase = []
+    let nb0aSupprimer = 0;
+    let decallage = 0;
+    for (let y = 0; y < nbCaseY; y++) {
+        mouvementCase.push([]);
+        for (let x = 1; x < nbCaseX + 1; x++) {
+
+            if (arrayModif[y][nbCaseX -x +decallage] == 0) {
+                arrayModif[y].splice(nbCaseX - x+decallage, 1);
+                arrayModif[y].unshift(0);
+                nb0aSupprimer ++;
+                decallage++;
+                mouvementCase[y].push(0);
+            }
+            else if (arrayModif[y][nbCaseX - x+decallage] != 0) {
+                mouvementCase[y].push(nb0aSupprimer*tailleCase) 
+            }
+        }
+        console.log("test")
+        nb0aSupprimer = 0;
+        decallage = 0;
+
+    }
+
+    //Etape 3.2:
+    //je replace les chiffres dans la grille:
+    if (direction == "droite") {
+        for (let y = 0; y<mouvementCase.length; y++) {
+            mouvementCase[y].reverse();
+            for (let x = 0; x < mouvementCase[y].length; x++) {
+                if (mouvementCase[y][x] != 0) {
+                    listeCaseMouvement[y][x].targetX = mouvementCase[y][x];
+                    listeCaseMouvement[y][x].targetY = 0;
+                    listeCaseMouvement[y][x].animation = true;
+                }
+            }
+        }
+    } else if (direction == "gauche") {
+        for (let y = 0; y<mouvementCase.length; y++) {
+            for (let x = 0; x < mouvementCase[y].length; x++) {
+                if (mouvementCase[y][x] != 0) {
+                    listeCaseMouvement[y][x].targetX = -mouvementCase[y][x];
+                    listeCaseMouvement[y][x].targetY = 0;
+                    listeCaseMouvement[y][x].animation = true;
+                }
+            }
+        }
+    }
+   
+
+    /*
+    //Etape 3:
     let tailleListeX = arrayModif[0].length
     let tailleListeY = arrayModif.length
 
@@ -237,35 +317,49 @@ function deplacementCase(direction) {
                 arrayModif[y][tailleListeX - x + 1] += arrayModif[y][tailleListeX - x]
                 arrayModif[y].splice(tailleListeX - x, 1);
                 arrayModif[y].unshift(0);
-
             }
         }
     }
 
-    // Etape 3 replacer dans le grille du plateau:
+    // Etape 4 replacer dans le grille du plateau:
     if (direction == "haut") {
         for (let x = 0; x < nbCaseX; x++) {
             arrayModif[x].reverse()
             for (let y = 0; y < nbCaseY; y++) {
-                plateau[y][x] = arrayModif[x][y]
+                listeCaseMouvement[y][x].ancienneX = x*tailleCase;
+                listeCaseMouvement[y][x].ancienneY = y*tailleCase;
+                listeCaseMouvement[y][x].value = arrayModif[x][y];
             }
         }
     } else if (direction == "bas") {
         for (let x = 0; x < nbCaseX; x++) {
             for (let y = 0; y < nbCaseY; y++) {
-                plateau[y][x] = arrayModif[x][y]
+                listeCaseMouvement[y][x].ancienneX = x*tailleCase;
+                listeCaseMouvement[y][x].ancienneY = y*tailleCase;
+                listeCaseMouvement[y][x].value = arrayModif[x][y]  // listeCaseMouvement[y][x].value
             }
         }
     } else if (direction == "droite") {
         for (let y = 0; y < nbCaseY; y++) {
-            plateau[y] = arrayModif[y]
+            for (let x = 0; x < nbCaseX; x++) {
+                listeCaseMouvement[y][x].ancienneX = x*tailleCase;
+                listeCaseMouvement[y][x].ancienneY = y*tailleCase;
+                listeCaseMouvement[y][x].value = arrayModif[y][x]
+            }
         }
     } else if (direction == "gauche") {
         for (let y = 0; y < nbCaseY; y++) {
             arrayModif[y].reverse()
-            plateau[y] = arrayModif[y]
+            for (let x = 0; x < nbCaseX; x++) {
+                listeCaseMouvement[y][x].ancienneX = x*tailleCase;
+                listeCaseMouvement[y][x].ancienneY = y*tailleCase;
+                listeCaseMouvement[y][x].value = arrayModif[y][x]
+            }
         }
     }
+    */
+    console.log("test")
+    
 
 }
 

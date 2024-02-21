@@ -1,5 +1,7 @@
 
 
+
+
 const HEIGHT = 800;
 const WIDTH = 800;
 
@@ -8,12 +10,12 @@ let nbCaseX = 4;
 let nbCaseY = 4;
 let tailleChiffre = WIDTH / nbCaseX / 3;
 let tailleCase = WIDTH / nbCaseX;
-let tailleBordure = tailleCase / 10;
+let tailleBordure = tailleCase / 20;
 
 
 //cadre de jeu:
-let debutPlateauX = tailleBordure;
-let debutPlateauY = tailleBordure;
+let debutPlateauX = 0;
+let debutPlateauY = 0;
 let largeurPlateau = WIDTH - debutPlateauX;
 let hauteurPlateau = HEIGHT - tailleBordure - debutPlateauY;
 
@@ -22,6 +24,8 @@ let plateau;
 let listeCaseMouvement = [];
 let creationNewCase = false;
 let direction;
+let vitesseTransiton = 0.1;
+let score = 0;
 
 let couleurCase = {
     0: "#ccc0b2",
@@ -97,22 +101,8 @@ function initGame() {
             plateau[y].push(0)
         }
     }
-    //ajouterNouvelleCase();
-    //ajouterNouvelleCase();
-    listeCaseMouvement[0][0].value = 4;
-    listeCaseMouvement[0][1].value = 32;
-    listeCaseMouvement[0][2].value = 2;   
-    listeCaseMouvement[0][3].value = 16;
-
-    listeCaseMouvement[1][2].value = 2;
-    listeCaseMouvement[1][3].value = 16;    
-
-    listeCaseMouvement[2][2].value = 4;
-    listeCaseMouvement[2][3].value = 2;    
-
-    listeCaseMouvement[3][1].value = 2;    
-
-
+    ajouterNouvelleCase();
+    ajouterNouvelleCase();
 
     affichePlateau();
 
@@ -164,7 +154,7 @@ function annimationCase() {
             if (elem.animation) {
 
                 gsap.fromTo(elem, { x: elem.x, y: elem.y }, {
-                    x: elem.x + elem.targetX, y: elem.y + elem.targetY, duration: 0.4,
+                    x: elem.x + elem.targetX, y: elem.y + elem.targetY, duration: vitesseTransiton, ease: "power2",
                     onUpdate: function () {
                         affichePlateau();
                     }, onComplete: () => {
@@ -210,6 +200,8 @@ function mettreAjourListe() {
            
             if (elem.addition) {
                 elem.value = elem.newValue*2;
+                score += elem.value;
+                updateScore(score);
             }else{
                 elem.value = elem.newValue;
             }
@@ -232,9 +224,7 @@ function affichePlateau() {
 
     context.fillStyle = "black";
     context.clearRect(0, 0, WIDTH, HEIGHT);
-
     listeCaseMouvement.forEach(function (element) {
-
         element.forEach(function (elem) {
 
             if (elem.value != 0) {
@@ -250,18 +240,18 @@ function affichePlateau() {
                 context.fillText(elem.value, elem.x + tailleCase / 2, elem.y + tailleCase / 2);
             }
         })
-
-
     });
-
+    
     //affiche bordure:
     context.strokeStyle = "#bbaea0";
     context.lineWidth = tailleBordure;
     for (let y = 0; y < nbCaseY; y++) {
         for (let x = 0; x < nbCaseX; x++) {
-            context.strokeRect(debutPlateauX + (largeurPlateau / nbCaseX) * x, debutPlateauY + (hauteurPlateau / nbCaseY) * y, largeurPlateau / nbCaseX, hauteurPlateau / nbCaseY);
+            context.strokeRect(tailleCase * x, tailleCase * y, largeurPlateau / nbCaseX, hauteurPlateau / nbCaseY);
+    
         }
     }
+    
 }
 
 
@@ -307,8 +297,6 @@ function deplacementCase(direction) {
             arrayModif.push([]);
             for (let y = 0; y < nbCaseY; y++) {
                 arrayModif[x].push(listeCaseMouvement[y][x].value);
-
-
             }
         }
     }

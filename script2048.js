@@ -26,6 +26,7 @@ let listeCaseMouvement = [
     [{ value: 0, animation: false, targetX: 0, targetY: 0 }, { value: 0, animation: false, targetX: 0, targetY: 0 }, { value: 0, animation: false, targetX: 0, targetY: 0 }, { value: 0, animation: false, targetX: 0, targetY: 0 }]
 ];
 let creationNewCase = false;
+let direction;
 
 let couleurCase = {
     0: "#ccc0b2",
@@ -59,19 +60,26 @@ window.onload = function () {
 function pressKey(event) {
     let deplacement = false;
     if (event.key == "z") {
-        deplacementCase("haut");
+        direction = "haut";
         deplacement = true;
+
     } else if (event.key == "q") {
-        deplacementCase("gauche");
+        direction = "gauche";
         deplacement = true;
+
     } else if (event.key == "s") {
-        deplacementCase("bas");
+        direction = "bas";
         deplacement = true;
+
     } else if (event.key == "d") {
-        deplacementCase("droite");
+        direction = "droite";
         deplacement = true;
     }
     if (deplacement) {
+        if (testSiAnnimationEnCours()) {
+            alert("annimation en cours, veuillez attendre")
+        }
+        deplacementCase(direction);
         annimationCase();      // avec annimation
     }
 
@@ -83,7 +91,7 @@ function initGame() {
     for (let y = 0; y < nbCaseY; y++) {
         listeCaseMouvement.push([])
         for (let x = 0; x < nbCaseX; x++) {
-            listeCaseMouvement[y].push({ value: 0, animation: false, x: x * tailleCase, y: y * tailleCase, ancienneX: x * tailleCase, ancienneY: y * tailleCase });
+            listeCaseMouvement[y].push({ newValue: 0, value: 0, animation: false, x: x * tailleCase, y: y * tailleCase, addition : false });
         }
     }
     ////
@@ -96,9 +104,10 @@ function initGame() {
     }
     //ajouterNouvelleCase();
     //ajouterNouvelleCase();
-    listeCaseMouvement[0][0].value = 2;
-    listeCaseMouvement[0][3].value = 2;
-    listeCaseMouvement[1][2].value = 4;
+    listeCaseMouvement[1][1].value = 16;
+    listeCaseMouvement[2][1].value = 16;
+    listeCaseMouvement[3][1].value = 2;    
+
 
 
     affichePlateau();
@@ -110,6 +119,14 @@ function game() {
 
     if (!finGame()) {
         requestAnimationFrame(game)
+    }
+
+    if (creationNewCase) {
+        mettreAjourListe();
+        ajouterNouvelleCase();
+        creationNewCase = false;
+        affichePlateau();
+        //maintenant je dois remettre les information dans la grille pour etre pret pour le nouveau mouvement
 
     }
 }
@@ -135,32 +152,72 @@ function finGame() {
 
 
 function annimationCase() {
-    creationNewCase = false;
+    
+
     listeCaseMouvement.forEach(function (element) {
+        
         element.forEach(function (elem) {
-            if (elem.animation && (elem.targetX != 0 || elem.targetY != 0)) {
+            if (elem.animation) {
+
                 gsap.fromTo(elem, { x: elem.x, y: elem.y }, {
-                    x: elem.x + elem.targetX, y: elem.y + elem.targetY, duration: 1,
+                    x: elem.x + elem.targetX, y: elem.y + elem.targetY, duration: 0.4,
                     onUpdate: function () {
                         affichePlateau();
                     }, onComplete: () => {
                         // on remet les valeurs à 0:
-                        listeCaseMouvement[(elem.y / tailleCase)][(elem.x / tailleCase)].value = elem.value;
-                        listeCaseMouvement[(elem.y / tailleCase) - (elem.targetY / tailleCase)][(elem.x / tailleCase) - (elem.targetX / tailleCase)].value = 0;
+                        listeCaseMouvement[(elem.y / tailleCase)][(elem.x / tailleCase)].newValue = elem.value;
+                        
+                        //listeCaseMouvement[(elem.y / tailleCase)][(elem.x / tailleCase)].newValue = elem.value;
+                        
+                        console.log((elem.y / tailleCase) - (elem.targetY / tailleCase), (elem.x / tailleCase) - (elem.targetX / tailleCase))
                         listeCaseMouvement[(elem.y / tailleCase) - (elem.targetY / tailleCase)][(elem.x / tailleCase) - (elem.targetX / tailleCase)].animation = false;
-                        elem.x = elem.ancienneX;
-                        elem.y = elem.ancienneY;
                         elem.targetY = 0;
                         elem.targetX = 0;
-                        if (!creationNewCase) {
-                            ajouterNouvelleCase();
-                            creationNewCase = true;
-                        }
+                        creationNewCase = true;
                     }
                 })
+
+
             }
         })
     })
+
+}
+
+
+function testSiAnnimationEnCours() {
+    let annimationEnCours = false;
+    listeCaseMouvement.forEach(function (element) {
+        element.forEach(function (elem) {
+            if (elem.animation) {
+                annimationEnCours = true;
+            }
+        })
+    })
+    return annimationEnCours;
+
+}
+
+function mettreAjourListe() {
+    listeCaseMouvement.forEach(function (element, indexY) {
+        element.forEach(function (elem, indexX) {
+           
+            if (elem.addition) {
+                elem.value = elem.newValue*2;
+            }else{
+                elem.value = elem.newValue;
+            }
+            //elem.value = elem.newValue;
+
+            elem.newValue = 0;
+            elem.y = indexY * tailleCase;
+            elem.x = indexX * tailleCase;
+        })
+    })
+
+
+
+
 }
 
 function affichePlateau() {
@@ -274,7 +331,7 @@ function deplacementCase(direction) {
 
     //Etape 2.2:
     //on supprime les 0:
-    let mouvementCase = []
+    let mouvementCase = [];
     let nb0aSupprimer = 0;
     for (let y = 0; y < nbCaseY; y++) {
         mouvementCase.push([]);
@@ -296,24 +353,34 @@ function deplacementCase(direction) {
 
     console.log("FALITY !!!")
     let nbCaseListeX;
-
+    let additionCase = [];
+    nb0aSupprimer = 1;
     for (let y = 0; y < mouvementCase.length; y++) {
         nbCaseListeX = mouvementCase[y].length;
-        for (let x = 2; x < nbCaseListeX + 1; x++) {
+        additionCase.push([])
+        for (let x = 2; x < nbCaseListeX+1 ; x++) {
+
+            
             if (arrayModif[y][nbCaseListeX - x] == arrayModif[y][nbCaseListeX - x + 1] || arrayModif[y][nbCaseListeX - x + 1] == 0) {
+
                 mouvementCase[y].reverse();
-                mouvementCase[y][nbCaseListeX - x] += tailleCase;
+                mouvementCase[y][nbCaseListeX - x] += tailleCase*nb0aSupprimer;
                 mouvementCase[y].reverse();
 
-                arrayModif[y][nbCaseListeX - x] = 0
+
+                if (arrayModif[y][nbCaseListeX - x + 1] == 0) {
+                    nb0aSupprimer++;
+                    additionCase[y].push(false);
+                } else {
+                    additionCase[y].push(true);
+                    arrayModif[y][nbCaseListeX - x] = 0
+                }
+            } else {
+                additionCase[y].push(false);
             }
         }
+        additionCase[y].push(false); // car le dernier chiffre ne peut pas etre additionné
     }
-
-
-    /*
-    Il faut regler le pb pour remettre les infos dans la grille !!!
-    */
 
 
     //Etape 3.2:
@@ -321,23 +388,29 @@ function deplacementCase(direction) {
     if (direction == "droite") {
         for (let y = 0; y < listeCaseMouvement.length; y++) {
             mouvementCase[y].reverse();
+            additionCase[y].reverse();
             for (let x = 0; x < listeCaseMouvement[y].length; x++) {
                 if (listeCaseMouvement[y][x].value != 0) {
                     listeCaseMouvement[y][x].targetX = mouvementCase[y][0];
                     listeCaseMouvement[y][x].targetY = 0;
                     listeCaseMouvement[y][x].animation = true;
+                    listeCaseMouvement[y][x].addition = additionCase[y][0];
                     mouvementCase[y].splice(0, 1);
+                    additionCase[y].splice(0, 1);
                 }
             }
         }
     } else if (direction == "gauche") {
         for (let y = 0; y < listeCaseMouvement.length; y++) {
+            
             for (let x = 0; x < listeCaseMouvement[y].length; x++) {
                 if (listeCaseMouvement[y][x].value != 0) {
                     listeCaseMouvement[y][x].targetX = -mouvementCase[y][0];
                     listeCaseMouvement[y][x].targetY = 0;
                     listeCaseMouvement[y][x].animation = true;
+                    listeCaseMouvement[y][x].addition = additionCase[y][0];
                     mouvementCase[y].splice(0, 1);
+                    additionCase[y].splice(0, 1);
                 }
             }
         }
@@ -348,13 +421,16 @@ function deplacementCase(direction) {
                     listeCaseMouvement[y][x].targetX = 0;
                     listeCaseMouvement[y][x].targetY = -mouvementCase[x][0];
                     listeCaseMouvement[y][x].animation = true;
+                    listeCaseMouvement[y][x].addition = additionCase[x][0];
                     mouvementCase[x].splice(0, 1);
+                    additionCase[x].splice(0, 1);
                 }
             }
         }
     } else if (direction == "bas") {
         for (let y = 0; y < listeCaseMouvement.length; y++) {
             mouvementCase[y].reverse();
+            additionCase[y].reverse();
 
             for (let x = 0; x < listeCaseMouvement[y].length; x++) {
 
@@ -362,48 +438,13 @@ function deplacementCase(direction) {
                     listeCaseMouvement[x][y].targetY = mouvementCase[y][0];
                     listeCaseMouvement[x][y].targetX = 0;
                     listeCaseMouvement[x][y].animation = true;
+                    listeCaseMouvement[x][y].addition = additionCase[y][0];
                     mouvementCase[y].splice(0, 1);
+                    additionCase[y].splice(0, 1);
                 }
             }
         }
     }
-
-    /*else if (direction == "gauche") {
-        for (let y = 0; y < mouvementCase.length; y++) {
-            for (let x = 0; x < mouvementCase[y].length; x++) {
-                if (mouvementCase[y][x] != 0) {
-                    listeCaseMouvement[y][x].targetX = -mouvementCase[y][x];
-                    listeCaseMouvement[y][x].targetY = 0;
-                    listeCaseMouvement[y][x].animation = true;
-                }
-            }
-        }
-    } else if (direction == "haut") {
-        for (let x = 0; x < mouvementCase.length; x++) {
-            for (let y = 0; y < mouvementCase[x].length; y++) {
-                if (mouvementCase[x][y] != 0) {
-                    listeCaseMouvement[y][x].targetY = -mouvementCase[x][y];
-                    listeCaseMouvement[y][x].targetX = 0;
-                    listeCaseMouvement[y][x].animation = true;
-                }
-            }
-        }
-    } else if (direction == "bas") {
-        for (let y = 0; y < mouvementCase.length; y++) {
-            mouvementCase[y].reverse();
-            for (let x = 0; x < mouvementCase[y].length; x++) {
-
-                if (mouvementCase[y][x] != 0) {
-                    listeCaseMouvement[x][y].targetY = mouvementCase[y][x];
-                    listeCaseMouvement[x][y].targetX = 0;
-                    listeCaseMouvement[x][y].animation = true;
-
-                }
-            }
-        }
-    }
-    */
-
     console.log("test")
 
 }

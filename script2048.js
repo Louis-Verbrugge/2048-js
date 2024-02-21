@@ -19,12 +19,7 @@ let hauteurPlateau = HEIGHT - tailleBordure - debutPlateauY;
 
 //plateau de jeu:
 let plateau;
-let listeCaseMouvement = [
-    [{ valeurAnnimation: 0, animation: false, targetX: 0, targetY: 0 }, { value: 0, animation: false, targetX: 0, targetY: 0 }, { value: 0, animation: false, targetX: 0, targetY: 0 }, { value: 0, animation: false, targetX: 0, targetY: 0 }],
-    [{ value: 0, animation: false, targetX: 0, targetY: 0 }, { value: 0, animation: false, targetX: 0, targetY: 0 }, { value: 0, animation: false, targetX: 0, targetY: 0 }, { value: 0, animation: false, targetX: 0, targetY: 0 }],
-    [{ value: 0, animation: false, targetX: 0, targetY: 0 }, { value: 0, animation: false, targetX: 0, targetY: 0 }, { value: 0, animation: false, targetX: 0, targetY: 0 }, { value: 0, animation: false, targetX: 0, targetY: 0 }],
-    [{ value: 0, animation: false, targetX: 0, targetY: 0 }, { value: 0, animation: false, targetX: 0, targetY: 0 }, { value: 0, animation: false, targetX: 0, targetY: 0 }, { value: 0, animation: false, targetX: 0, targetY: 0 }]
-];
+let listeCaseMouvement = [];
 let creationNewCase = false;
 let direction;
 
@@ -104,8 +99,17 @@ function initGame() {
     }
     //ajouterNouvelleCase();
     //ajouterNouvelleCase();
-    listeCaseMouvement[1][1].value = 16;
-    listeCaseMouvement[2][1].value = 16;
+    listeCaseMouvement[0][0].value = 4;
+    listeCaseMouvement[0][1].value = 32;
+    listeCaseMouvement[0][2].value = 2;   
+    listeCaseMouvement[0][3].value = 16;
+
+    listeCaseMouvement[1][2].value = 2;
+    listeCaseMouvement[1][3].value = 16;    
+
+    listeCaseMouvement[2][2].value = 4;
+    listeCaseMouvement[2][3].value = 2;    
+
     listeCaseMouvement[3][1].value = 2;    
 
 
@@ -166,7 +170,9 @@ function annimationCase() {
                     }, onComplete: () => {
                         // on remet les valeurs à 0:
                         listeCaseMouvement[(elem.y / tailleCase)][(elem.x / tailleCase)].newValue = elem.value;
-                        
+                        if (!listeCaseMouvement[(elem.y / tailleCase)][(elem.x / tailleCase)].addition) {
+                            listeCaseMouvement[(elem.y / tailleCase)][(elem.x / tailleCase)].addition = listeCaseMouvement[(elem.y / tailleCase) - (elem.targetY / tailleCase)][(elem.x / tailleCase) - (elem.targetX / tailleCase)].addition
+                        }
                         //listeCaseMouvement[(elem.y / tailleCase)][(elem.x / tailleCase)].newValue = elem.value;
                         
                         console.log((elem.y / tailleCase) - (elem.targetY / tailleCase), (elem.x / tailleCase) - (elem.targetX / tailleCase))
@@ -207,11 +213,13 @@ function mettreAjourListe() {
             }else{
                 elem.value = elem.newValue;
             }
-            //elem.value = elem.newValue;
-
             elem.newValue = 0;
             elem.y = indexY * tailleCase;
             elem.x = indexX * tailleCase;
+            elem.animation = false;
+            elem.addition = false;
+            elem.targetX = 0;
+            elem.targetY = 0;
         })
     })
 
@@ -380,6 +388,7 @@ function deplacementCase(direction) {
             }
         }
         additionCase[y].push(false); // car le dernier chiffre ne peut pas etre additionné
+        nb0aSupprimer = 1;
     }
 
 
@@ -454,7 +463,7 @@ function deplacementCase(direction) {
 function restartGame() {
     gsap.to(".jeu2048", {
         y: -1000, duration: 0.5, ease: "step", onComplete: function () {
-            initGame()
+            initGame();
             gsap.to(".jeu2048", { y: 0, duration: 2, ease: "bounce" }); // Retour à la position initiale
 
         }

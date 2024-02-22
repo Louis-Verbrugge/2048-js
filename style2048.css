@@ -1,31 +1,55 @@
+@media all and (max-width: 800px) {
+    /* styles CSS ici */
+    :root {
+        --tailleFenetreJeu: 20%; 
+    }
+}
+
+@media all and (min-width: 800px){
+    /* styles CSS ici */
+    :root {
+        --tailleFenetreJeu: 40%; 
+    }
+}
+
+
+
 body {
     background-color: #faf8ef;
     width: 100%;
+    align-items: center;
+    /* overflow: hidden; hidden*/
 }
 
 #board{
     width: 100%;
-    height: 100%;
+    height: 100%;    
 }
 
 .jeu2048{
     flex-direction: column;
-    align-items: center;
-    margin-right: 35%;
-    margin-left: 35%;
-
+    margin-right: var(--tailleFenetreJeu); /* 30% pour telephones */
+    margin-left: var(--tailleFenetreJeu);  /* 30% pour telephones */
 }
 
-.blockRow{
+.blockATH{
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
-    color: rgb(0, 0, 0);
+    justify-content: space-around;
+    margin: 2em;
 }
 
+
 #newGame{
-    border-radius: 50%;
+    border-radius: 15%;
     background-color: #8f7a66;
     color:#f9f6f2;
     border-style : none;
+}
+
+h2{
+    padding: 5px;
+    border-radius: 5%;
+    background-color: #bbada0; 
+    color: r;  
 }

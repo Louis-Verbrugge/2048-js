@@ -2,8 +2,10 @@
 
 
 
-const HEIGHT = 800;
-const WIDTH = 800;
+
+const HEIGHT = 500;
+const WIDTH = 500;
+
 
 
 let nbCaseX = 4;
@@ -42,18 +44,64 @@ let couleurCase = {
     2048: "#e9c33c"
 }
 
+let positionClique1 = { x: 0, y: 0 };
+let positionClique2 = { x: 0, y: 0 };
 
 window.onload = function () {
 
+
+
+    if(/Android|webOS|iPhone/i.test(navigator.userAgent)) {
+        document.addEventListener("touchstart", pressClick);
+        document.addEventListener("touchend", releaseClick);
+        alert("mobilee")
+    } else {
+        document.addEventListener("keydown", pressKey);
+    }
+
     board = document.getElementById("board")
+    
     board.height = HEIGHT;
     board.width = WIDTH;
     context = board.getContext("2d");
 
     requestAnimationFrame(game);
-    document.addEventListener("keydown", pressKey)
     initGame();
 
+}
+
+function pressClick(event) {
+    positionClique1.x = event.touches[0].clientX;
+    positionClique1.y = event.touches[0].clientY;
+}
+
+function releaseClick(event) {
+    positionClique2.x = event.changedTouches[0].clientX;
+    positionClique2.y = event.changedTouches[0].clientY;
+    
+    directionClique();
+}
+
+function directionClique() {
+    let direction = "";
+    let diffX = positionClique2.x - positionClique1.x;
+    let diffY = positionClique2.y - positionClique1.y;
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+        if (Math.abs(positionClique1.x) < Math.abs(positionClique2.x)) {
+            direction = "droite";
+        } else {
+            direction = "gauche";
+        }
+    } else {
+        if (Math.abs(positionClique1.y) < Math.abs(positionClique2.y)) {
+            direction = "bas";
+        } else {
+            direction = "haut";
+        }
+    }
+    
+    deplacementCase(direction);
+    annimationCase();      // avec annimation
 }
 
 function pressKey(event) {

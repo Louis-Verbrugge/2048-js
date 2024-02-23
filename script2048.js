@@ -8,8 +8,8 @@ const WIDTH = 500;
 
 
 
-let nbCaseX = 4;
-let nbCaseY = 4;
+let nbCaseX = 2;
+let nbCaseY = 2;
 let tailleChiffre = WIDTH / nbCaseX / 3;
 let tailleCase = WIDTH / nbCaseX;
 let tailleBordure = tailleCase / 20;
@@ -22,12 +22,12 @@ let largeurPlateau = WIDTH - debutPlateauX;
 let hauteurPlateau = HEIGHT - tailleBordure - debutPlateauY;
 
 //plateau de jeu:
-let plateau;
 let listeCaseMouvement = [];
 let creationNewCase = false;
 let direction;
 let vitesseTransiton = 0.1;
 let score = 0;
+let finDePartie = false;
 
 let couleurCase = {
     0: "#ccc0b2",
@@ -79,7 +79,9 @@ function releaseClick(event) {
     positionClique2.x = event.changedTouches[0].clientX;
     positionClique2.y = event.changedTouches[0].clientY;
     
-    directionClique();
+    if (!finDePartie) {
+        directionClique();
+    }
 }
 
 function directionClique() {
@@ -105,29 +107,31 @@ function directionClique() {
 }
 
 function pressKey(event) {
-    let deplacement = false;
-    if (event.key == "z") {
-        direction = "haut";
-        deplacement = true;
+    if (!finDePartie) {
+        let deplacement = false;
+        if (event.key == "z") {
+            direction = "haut";
+            deplacement = true;
 
-    } else if (event.key == "q") {
-        direction = "gauche";
-        deplacement = true;
+        } else if (event.key == "q") {
+            direction = "gauche";
+            deplacement = true;
 
-    } else if (event.key == "s") {
-        direction = "bas";
-        deplacement = true;
+        } else if (event.key == "s") {
+            direction = "bas";
+            deplacement = true;
 
-    } else if (event.key == "d") {
-        direction = "droite";
-        deplacement = true;
-    }
-    if (deplacement) {
-        if (testSiAnnimationEnCours()) {
-            alert("annimation en cours, veuillez attendre")
+        } else if (event.key == "d") {
+            direction = "droite";
+            deplacement = true;
         }
-        deplacementCase(direction);
-        annimationCase();      // avec annimation
+        if (deplacement) {
+            if (testSiAnnimationEnCours()) {
+                alert("annimation en cours, veuillez attendre")
+            }
+            deplacementCase(direction);
+            annimationCase();      // avec annimation
+        }
     }
 
 }
@@ -141,55 +145,63 @@ function initGame() {
             listeCaseMouvement[y].push({ newValue: 0, value: 0, animation: false, x: x * tailleCase, y: y * tailleCase, addition : false });
         }
     }
-    ////
-    plateau = []
-    for (let y = 0; y < nbCaseY; y++) {
-        plateau.push([])
-        for (let x = 0; x < nbCaseX; x++) {
-            plateau[y].push(0)
-        }
-    }
+    finDePartie = false;
     ajouterNouvelleCase();
     ajouterNouvelleCase();
-
     affichePlateau();
-
 }
 
+
 function game() {
-
-
-    if (!finGame()) {
+    if (!finDePartie) {
         requestAnimationFrame(game)
+    } else {
+        pageFinGame("Game Over");
+        return;
     }
 
     if (creationNewCase) {
         mettreAjourListe();
         ajouterNouvelleCase();
-        creationNewCase = false;
         affichePlateau();
-        //maintenant je dois remettre les information dans la grille pour etre pret pour le nouveau mouvement
-
+        finDePartie = finGame();
+        creationNewCase = false;
     }
 }
 
 
-
+function pageFinGame(resultat) {
+    
+    context.font = tailleChiffre + "px verdana";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillStyle = "#776e65";
+    context.fillText(resultat, WIDTH/2, HEIGHT/2);
+}
 
 
 function finGame() {
-    nbCaseVide = 0
 
-    plateau.forEach(function (element) {
-
-        element.forEach(function (elem) {
-
-            if (elem == 0) {
-                nbCaseVide++
+    // maitenant je dois regarder si il y a des mouvements possible et si il y a des cases vides:
+    for (let y = 0; y < nbCaseY; y++) {
+        for (let x = 0; x < nbCaseX; x++) {
+            if (x < nbCaseX - 1) {
+                if (listeCaseMouvement[y][x].value == listeCaseMouvement[y][x + 1].value) {
+                    return false;
+                }
             }
-        });
-    });
-    return nbCaseVide <= 0
+            if (y < nbCaseY - 1) {
+                if (listeCaseMouvement[y][x].value == listeCaseMouvement[y + 1][x].value) {
+                    return false;
+                }
+            }
+            if (listeCaseMouvement[y][x].value == 0) {
+                return false;
+            }
+        }
+    }
+    // l'utilisateur a perdu
+    return true;
 }
 
 
@@ -211,9 +223,7 @@ function annimationCase() {
                         if (!listeCaseMouvement[(elem.y / tailleCase)][(elem.x / tailleCase)].addition) {
                             listeCaseMouvement[(elem.y / tailleCase)][(elem.x / tailleCase)].addition = listeCaseMouvement[(elem.y / tailleCase) - (elem.targetY / tailleCase)][(elem.x / tailleCase) - (elem.targetX / tailleCase)].addition
                         }
-                        //listeCaseMouvement[(elem.y / tailleCase)][(elem.x / tailleCase)].newValue = elem.value;
-                        
-                        console.log((elem.y / tailleCase) - (elem.targetY / tailleCase), (elem.x / tailleCase) - (elem.targetX / tailleCase))
+
                         listeCaseMouvement[(elem.y / tailleCase) - (elem.targetY / tailleCase)][(elem.x / tailleCase) - (elem.targetX / tailleCase)].animation = false;
                         elem.targetY = 0;
                         elem.targetX = 0;
@@ -317,8 +327,9 @@ function ajouterNouvelleCase() {
 
     let trouvePlace = false;
     while (!trouvePlace) {
-        let x = Math.floor(Math.random() * nbCaseX);;
-        let y = Math.floor(Math.random() * nbCaseY);;
+        let x = Math.floor(Math.random() * nbCaseX);
+        let y = Math.floor(Math.random() * nbCaseY);
+        console.log("position x: " + x + " position y: " + y );
         if (listeCaseMouvement[y][x].value == 0) {
             listeCaseMouvement[y][x].value = valeurNewCase;
             trouvePlace = true;
@@ -395,7 +406,6 @@ function deplacementCase(direction) {
     //Etape 2.3:
     //on additionne les chiffres si c'est possible:
 
-    console.log("FALITY !!!")
     let nbCaseListeX;
     let additionCase = [];
     nb0aSupprimer = 1;
@@ -490,7 +500,6 @@ function deplacementCase(direction) {
             }
         }
     }
-    console.log("test")
 
 }
 
